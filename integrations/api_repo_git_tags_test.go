@@ -32,10 +32,10 @@ func TestAPIGitTags(t *testing.T) {
 	defer gitRepo.Close()
 
 	commit, _ := gitRepo.GetBranchCommit("master")
-	lTagName := "lightweightTag"
+	lTagName := "LightweightTagApi"
 	gitRepo.CreateTag(lTagName, commit.ID.String())
 
-	aTagName := "annotatedTag"
+	aTagName := "AnnotatedTagApi"
 	aTagMessage := "my annotated message"
 	gitRepo.CreateAnnotatedTag(aTagName, aTagMessage, commit.ID.String())
 	aTag, _ := gitRepo.GetTag(aTagName)
