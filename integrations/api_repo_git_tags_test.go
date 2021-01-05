@@ -33,11 +33,16 @@ func TestAPIGitTags(t *testing.T) {
 
 	commit, _ := gitRepo.GetBranchCommit("master")
 	lTagName := "LightweightTagApi"
-	gitRepo.CreateTag(lTagName, commit.ID.String())
+	lTagNameErr := gitRepo.CreateTag(lTagName, commit.ID.String())
+
+	assert.NoError(t, lTagNameErr)
 
 	aTagName := "AnnotatedTagApi"
 	aTagMessage := "my annotated message"
-	gitRepo.CreateAnnotatedTag(aTagName, aTagMessage, commit.ID.String())
+	aTagCreateErr := gitRepo.CreateAnnotatedTag(aTagName, aTagMessage, commit.ID.String())
+
+	assert.NoError(t, aTagCreateErr)
+
 	aTag, _ := gitRepo.GetTag(aTagName)
 
 	// SHOULD work for annotated tags
