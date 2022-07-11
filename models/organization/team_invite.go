@@ -41,6 +41,22 @@ func (err ErrTeamInviteNotFound) Error() string {
 	return fmt.Sprintf("team invite was not found [token: %s]", err.Token)
 }
 
+// ErrUserEmailAlreadyAdded represents a "user by email already added to team" error.
+type ErrUserEmailAlreadyAdded struct {
+	Name  string
+	Email string
+}
+
+// IsErrUserEmailAlreadyAdded checks if an error is a ErrUserEmailAlreadyAdded.
+func IsErrUserEmailAlreadyAdded(err error) bool {
+	_, ok := err.(ErrUserEmailAlreadyAdded)
+	return ok
+}
+
+func (err ErrUserEmailAlreadyAdded) Error() string {
+	return fmt.Sprintf("user with email already added [email: %s]", err.Email)
+}
+
 // TeamInvite represents an invite to a team
 type TeamInvite struct {
 	ID          int64              `xorm:"pk autoincr"`
@@ -50,6 +66,36 @@ type TeamInvite struct {
 	Email       string             `xorm:"UNIQUE(team_mail) NOT NULL"`
 	CreatedUnix timeutil.TimeStamp `xorm:"INDEX created"`
 	UpdatedUnix timeutil.TimeStamp `xorm:"INDEX updated"`
+}
+
+// checks if the given email corresponds to a user that has already been added
+func isTeamMemberByEmail(ctx context.Context, team *Team, email string) error {
+	user := new(user_model.User)
+	has, err := db.GetEngine(ctx).Where("email=?", email).Get(user)
+	if err != nil {
+		return err
+	}
+
+	if has {
+		exist, err := db.GetEngine(ctx).
+			Where("org_id=?", team.OrgID).
+			And("team_id=?", team.ID).
+			And("uid=?", user.ID).
+			Table("team_user").
+			Exist()
+		if err != nil {
+			return err
+		}
+
+		if exist {
+			return ErrUserEmailAlreadyAdded{
+				Name:  user.Name,
+				Email: email,
+			}
+		}
+	}
+
+	return nil
 }
 
 func CreateTeamInvite(ctx context.Context, doer *user_model.User, team *Team, email string) (*TeamInvite, error) {
@@ -65,6 +111,11 @@ func CreateTeamInvite(ctx context.Context, doer *user_model.User, team *Team, em
 			TeamID: team.ID,
 			Email:  email,
 		}
+	}
+
+	// check if the user is already a team member by email
+	if err = isTeamMemberByEmail(ctx, team, email); err != nil {
+		return nil, err
 	}
 
 	token, err := util.CryptoRandomString(25)
