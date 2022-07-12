@@ -91,11 +91,8 @@ func CreateTeamInvite(ctx context.Context, doer *user_model.User, team *Team, em
 			"team_user.org_id":  team.OrgID,
 			"team_user.team_id": team.ID,
 			"user.email":        email,
-		}).
-		Join("INNER", "user", "user.id = team_user.uid").
-		Table("team_user").
-		Exist()
-
+		}).Join("INNER", "user", "user.id = team_user.uid").
+		Table("team_user").Exist()
 	if err != nil {
 		return nil, err
 	}
