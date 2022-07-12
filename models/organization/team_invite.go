@@ -8,12 +8,12 @@ import (
 	"context"
 	"fmt"
 
-	"xorm.io/builder"
-
 	"code.gitea.io/gitea/models/db"
 	user_model "code.gitea.io/gitea/models/user"
 	"code.gitea.io/gitea/modules/timeutil"
 	"code.gitea.io/gitea/modules/util"
+
+	"xorm.io/builder"
 )
 
 type ErrTeamInviteAlreadyExist struct {
@@ -45,7 +45,6 @@ func (err ErrTeamInviteNotFound) Error() string {
 
 // ErrUserEmailAlreadyAdded represents a "user by email already added to team" error.
 type ErrUserEmailAlreadyAdded struct {
-	Name  string
 	Email string
 }
 
@@ -91,8 +90,10 @@ func CreateTeamInvite(ctx context.Context, doer *user_model.User, team *Team, em
 			"team_user.org_id":  team.OrgID,
 			"team_user.team_id": team.ID,
 			"user.email":        email,
-		}).Join("INNER", "user", "user.id = team_user.uid").
-		Table("team_user").Exist()
+		}).
+		Join("INNER", "user", "user.id = team_user.uid").
+		Table("team_user").
+		Exist()
 	if err != nil {
 		return nil, err
 	}

@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"code.gitea.io/gitea/models/db"
 	"code.gitea.io/gitea/models/organization"
 	"code.gitea.io/gitea/models/unittest"
 	"code.gitea.io/gitea/modules/test"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestEmailInvite(t *testing.T) {
